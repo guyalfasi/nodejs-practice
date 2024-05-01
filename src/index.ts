@@ -1,9 +1,9 @@
-import Koa from 'koa'
+import Koa, { Context, Next } from 'koa'
 import Router from 'koa-router'
 import bodyParser from 'koa-bodyparser'
 import jwt from 'jsonwebtoken';
 import koaJwt from 'koa-jwt';
-import { query } from './db'; 
+import { query } from './db';
 import cookie from 'koa-cookie';
 import 'dotenv/config'
 
@@ -16,12 +16,25 @@ app.use(cookie());
 app.use(koaJwt({
     secret: process.env.JWT_SECRET as string,
     passthrough: true,
-    getToken: (ctx) => {
-        const token = ctx.cookies.get('auth');
-        return token || null;
-    }
 }).unless({ path: [/^\/login/] }));
 
+const authenticate = async (ctx: Context, next: Next) => {
+    const token = ctx.cookies.get('auth');
+    if (!token) {
+        ctx.status = 401;
+        ctx.body = { message: 'Authentication Error: No session token provided' };
+        return;
+    }
+
+    try {
+        const decodedSessionUser = jwt.verify(token, process.env.JWT_SECRET as string);
+        ctx.state.user = decodedSessionUser;
+        await next();
+    } catch (err) {
+        ctx.status = 401;
+        ctx.body = { message: 'Authentication Error: Invalid token' };
+    }
+}
 
 interface LoginRequestEndpoint {
     username: string;
@@ -47,23 +60,23 @@ router.post('/login', async ctx => {
     }
 });
 
-router.get('/', async ctx => {
+router.get('/', authenticate, async ctx => {
     if (ctx.state.user) {
         const user = ctx.state.user;
         const currentDate = new Date().toLocaleDateString();
-        ctx.body = { message: `Hello ${user.username}, today is ${currentDate}` };    
+        ctx.body = { message: `Hello ${user.username}, today is ${currentDate}` };
     } else {
         ctx.status = 400
         ctx.body = { message: "Unauthorized Access" }
     }
 });
 
-router.get('/echo', async ctx => {
-    const message = ctx.query.msg 
+router.get('/echo', authenticate, async ctx => {
+    const message = ctx.query.msg
     if (message) {
         ctx.body = { message: `The message is ${message}` }
     } else {
-        ctx.status = 400;
+        ctx.status = 401;
         ctx.body = { message: `Message field missing` }
     }
 })
@@ -71,4 +84,3 @@ router.get('/echo', async ctx => {
 app.use(router.routes()).use(router.allowedMethods())
 
 app.listen(process.env.PORT).on('listening', () => console.log(`Listening on port ${process.env.PORT}`))
-
