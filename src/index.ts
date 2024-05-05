@@ -11,6 +11,13 @@ const app: Koa = new Koa();
 const router: Router = new Router();
 
 app.use(bodyParser());
+app.use(async (ctx, next) => {
+    await next();
+    if (ctx.status === 404 && ctx.method !== 'OPTIONS') {
+        ctx.status = 405;
+        ctx.body = { message: 'Method Not Allowed' }
+    }
+})
 
 app.use(koaJwt({
     secret: process.env.JWT_SECRET as string,
@@ -36,19 +43,13 @@ const authenticate = async (ctx: Context, next: Next) => {
 }
 
 let arr: (number | string)[] = [1, "2", 3]
-
 interface User {
     username: string;
-}
-interface LoginEndpoint {
-    username: string;
     password: string;
 }
 
-interface RegistrationEndpoint {
-    username: string;
-    password: string;
-    secretAdminPassword?: string;
+interface RegistrationEndpoint extends User {
+    secretAdminPassword: string;
 }
 
 interface ArrayEndpoint {
@@ -56,7 +57,13 @@ interface ArrayEndpoint {
 }
 
 router.post('/login', async (ctx) => {
-    const { username, password } = ctx.request.body as LoginEndpoint;
+    const { username, password } = ctx.request.body as User;
+
+    if (!username || !password) {
+        ctx.status = 400;
+        ctx.body = { message: 'One or more fields missing' }
+        return;
+    }
 
     const user = await db('users').where({ username }).first();
 
@@ -73,8 +80,8 @@ router.post('/login', async (ctx) => {
         const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1h' });
 
         ctx.cookies.set('auth', token, { httpOnly: true });
-        ctx.status = 201;
-        ctx.body = { message: 'Login Successful', token };
+        ctx.status = 200;
+        ctx.body = { message: 'Login successful', token };
     } else {
         ctx.status = 400;
         ctx.body = { message: 'User not found' };
@@ -84,6 +91,12 @@ router.post('/login', async (ctx) => {
 router.post('/register', async (ctx) => {
     const { username, password, secretAdminPassword } = ctx.request.body as RegistrationEndpoint;
     const hashedPassword = await bcrypt.hash(password, 10)
+
+    if (!username || !password) {
+        ctx.status = 400;
+        ctx.body = { message: 'One or more fields missing' }
+        return;
+    }
 
     const existingUser = await db('users').where({ username }).first();
     
@@ -110,7 +123,7 @@ router.get('/echo', authenticate, async (ctx) => {
     if (message) {
         ctx.body = { message: `The message is ${message}` }
     } else {
-        ctx.status = 401;
+        ctx.status = 400;
         ctx.body = { message: `Message field missing` }
     }
 })
@@ -133,6 +146,7 @@ router.post('/array', authenticate, async (ctx) => {
     const { value } = ctx.request.body as ArrayEndpoint;
     if (ctx.state.user.isAdmin) {
         arr = [...arr, value]
+        ctx.status = 201;
         ctx.body = { message: "Array updated", array: arr }
     } else {
         ctx.status = 403
@@ -146,6 +160,7 @@ router.put("/array/:index", authenticate, async (ctx) => {
     if (ctx.state.user.isAdmin) {
         if (arr[index]) {
             arr[index] = value;
+            ctx.status = 200;
             ctx.body = { message: "Array updated", array: arr };
         } else {
             ctx.status = 404;
@@ -179,7 +194,7 @@ router.delete('/array/:index', authenticate, async (ctx) => {
             arr[index] = 0;
             ctx.body = { message: "Array updated", array: arr }
         } else {
-            ctx.status = 400;
+            ctx.status = 404;
             ctx.body = { message: "Array is empty" }
         }
     } else {
