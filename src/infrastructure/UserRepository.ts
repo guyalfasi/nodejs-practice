@@ -12,10 +12,7 @@ export class UserRepository {
     }
 
     async updateToAdmin(username: string): Promise<User> {
-        const [updatedUser] = await db('users')
-            .where({ username })
-            .update({ isAdmin: true })
-            .returning('*');
+        const [updatedUser] = await db('users').where({ username }).update({ isAdmin: true }).returning('*');
         return updatedUser;
     }
 }

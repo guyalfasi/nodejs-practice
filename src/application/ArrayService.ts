@@ -1,6 +1,8 @@
-let arr: (string | number)[] = [1, "2", 3];
-
+import { arr, ArrayItem } from '../domains/Array'
 export class ArrayService {
+    constructor() {
+        
+    }
     getAll() {
         return arr;
     }
@@ -9,12 +11,12 @@ export class ArrayService {
         return arr[index] ?? null;
     }
 
-    addItem(value: number | string) {
+    addItem(value: ArrayItem) {
         arr.push(value);
         return arr;
     }
 
-    updateItem(index: number, value: number | string) {
+    updateItem(index: number, value: ArrayItem) {
         if (arr[index]) {
             arr[index] = value;
             return arr;

@@ -7,10 +7,6 @@ import { authenticate } from './middleware/authMiddleware';
 const router = new Router();
 const userService = new UserService();
 
-interface UserRegister extends User {
-    secretAdminPassword?: string;
-}
-
 router.post('/login', async (ctx: Context) => {
     const { username, password } = ctx.request.body as User;
 
@@ -43,7 +39,7 @@ router.post('/login', async (ctx: Context) => {
 });
 
 router.post('/register', async (ctx: Context) => {
-    const { username, password, secretAdminPassword } = ctx.request.body as UserRegister;
+    const { username, password, secretAdminPassword } = ctx.request.body as User;
 
     if (!username || !password) {
         ctx.status = 400;
@@ -52,7 +48,7 @@ router.post('/register', async (ctx: Context) => {
     }
 
     try {
-        const newUser = await userService.register(username, password, secretAdminPassword ? secretAdminPassword : '');
+        const newUser = await userService.register(username, password, secretAdminPassword ?? '');
         ctx.status = 201;
         ctx.body = { message: 'User registered successfully', user: newUser };
     } catch (error) {

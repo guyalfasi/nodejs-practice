@@ -2,14 +2,14 @@ import Router from 'koa-router';
 import { ArrayService } from '../application/ArrayService';
 import { Context } from 'koa';
 import { authenticate } from '../controllers/middleware/authMiddleware';
-import { ArrayItem } from '../domains/Array';
+import { ArrayEndpoint } from '../domains/Array';
 
 const router = new Router();
 const arrayService = new ArrayService();
 
 router.use(authenticate);
 
-router.get('/array', async (ctx: Context) => {
+router.get('/array', async (ctx: Context) => { 
     ctx.body = { array: arrayService.getAll() };
 });
 
@@ -25,7 +25,7 @@ router.get('/array/:index', async (ctx: Context) => {
 });
 
 router.post('/array', async (ctx: Context) => {
-    const { value } = ctx.request.body as ArrayItem;
+    const { value } = ctx.request.body as ArrayEndpoint;
     if (ctx.state.user.isAdmin) {
         ctx.body = { array: arrayService.addItem(value) };
     } else {
@@ -36,7 +36,7 @@ router.post('/array', async (ctx: Context) => {
 
 router.put('/array/:index', async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
-    const { value } = ctx.request.body as ArrayItem;
+    const { value } = ctx.request.body as ArrayEndpoint;
     if (ctx.state.user.isAdmin) {
         try {
             ctx.body = { array: arrayService.updateItem(index, value) };
@@ -69,7 +69,7 @@ router.delete('/array/:index', async (ctx: Context) => {
         } catch (error) {
             if (error instanceof Error) {
                 ctx.status = 404;
-                ctx.body = { message: error.message };    
+                ctx.body = { message: error.message };
             }
         }
     } else {
