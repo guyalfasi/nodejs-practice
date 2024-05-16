@@ -1,11 +1,10 @@
 import Router from 'koa-router';
-import { UserService } from '../application/UserService';
+import userService from '../services/UserService';
 import { Context } from 'koa';
 import { User } from '../domains/User'
-import { authenticate } from './middleware/authMiddleware';
+import { authenticate } from '../../../application/authMiddleware';
 
 const router = new Router();
-const userService = new UserService();
 
 router.post('/login', async (ctx: Context) => {
     const { username, password } = ctx.request.body as User;
@@ -26,12 +25,13 @@ router.post('/login', async (ctx: Context) => {
             ctx.body = { message: error.message };
             switch (error.message) {
                 case 'Invalid password':
-                    ctx.status = 401;
-                    break;
-                case 'User not found':
                     ctx.status = 400;
                     break;
+                case 'User not found':
+                    ctx.status = 404;
+                    break;
                 default:
+                    ctx.status = 500;
                     break;
             }
         }
@@ -59,6 +59,7 @@ router.post('/register', async (ctx: Context) => {
                     ctx.status = 400;
                     break;
                 default:
+                    ctx.status = 500;
                     break;
             }
             ctx.status = 400;
@@ -83,6 +84,7 @@ router.post('/admin', authenticate, async (ctx: Context) => {
                     ctx.status = 200;
                     break;
                 default:
+                    ctx.status = 500;
                     break;
             }
         }

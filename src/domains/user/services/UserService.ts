@@ -1,10 +1,9 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { UserRepository } from '../infrastructure/UserRepository';
+import userRepository from '../repos/UserRepository';
+import { UserService } from '../domains/User';
 
-const userRepository = new UserRepository();
-
-export class UserService {
+const userService: UserService = {
     async login(username: string, password: string) {
         const user = await userRepository.findByUsername(username);
         if (!user) {
@@ -19,7 +18,7 @@ export class UserService {
         const payload = { id: user.id, username: user.username, isAdmin: user.isAdmin };
         const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1h' });
         return { user, token };
-    }
+    },
 
     async register(username: string, password: string, secretAdminPassword: string) {
         const existingUser = await userRepository.findByUsername(username);
@@ -35,7 +34,7 @@ export class UserService {
         });
 
         return newUser;
-    }
+    },
 
     async makeAdmin(username: string) {
         const user = await userRepository.findByUsername(username);
@@ -52,3 +51,4 @@ export class UserService {
     }
 }
 
+export default userService;

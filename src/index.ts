@@ -2,13 +2,15 @@ import 'dotenv/config';
 import Koa from 'koa';
 import bodyParser from 'koa-bodyparser';
 import koaJwt from 'koa-jwt';
-import userRouter from './controllers/UserController';
-import arrayRouter from './controllers/ArrayController';
-import UIRouter from './controllers/UIController';
+import userRouter from './domains/user/controllers/UserController';
+import arrayRouter from './domains/array/controllers/ArrayController';
+import UIRouter from './domains/UI/controllers/UIController';
+import { methodChecker } from './application/methodChecker';
 
 const app: Koa = new Koa();
 
 app.use(bodyParser());
+app.use(methodChecker)
 app.use(koaJwt({
     secret: process.env.JWT_SECRET as string,
     passthrough: true,

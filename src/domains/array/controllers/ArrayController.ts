@@ -1,20 +1,33 @@
 import Router from 'koa-router';
-import { ArrayService } from '../application/ArrayService';
+import arrayService from '../services/ArrayService';
 import { Context } from 'koa';
-import { authenticate } from '../controllers/middleware/authMiddleware';
+import { authenticate } from '../../../application/authMiddleware';
 import { ArrayEndpoint } from '../domains/Array';
 
 const router = new Router();
-const arrayService = new ArrayService();
 
 router.use(authenticate);
 
-router.get('/array', async (ctx: Context) => { 
-    ctx.body = { array: arrayService.getAll() };
+router.get('/array', async (ctx: Context) => {
+    try {
+        const array = arrayService.getAll();
+        ctx.status = 200;  
+        ctx.body = { array };
+    } catch (error) {
+        if (error instanceof Error) {
+            ctx.status = 500;
+            ctx.body = { message: error.message };
+        }
+    }
 });
 
 router.get('/array/:index', async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
+    if (isNaN(index)) {
+        ctx.status = 400;
+        ctx.body = { message: 'Invalid index' }
+        return;
+    }
     const item = arrayService.getByIndex(index);
     if (item) {
         ctx.body = { value: item };
@@ -26,6 +39,10 @@ router.get('/array/:index', async (ctx: Context) => {
 
 router.post('/array', async (ctx: Context) => {
     const { value } = ctx.request.body as ArrayEndpoint;
+    if (!value) {
+        ctx.status = 400;
+        ctx.body = { message: 'Input missing' }
+    }
     if (ctx.state.user.isAdmin) {
         ctx.body = { array: arrayService.addItem(value) };
     } else {
@@ -37,6 +54,15 @@ router.post('/array', async (ctx: Context) => {
 router.put('/array/:index', async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
     const { value } = ctx.request.body as ArrayEndpoint;
+    if (!value) {
+        ctx.status = 400;
+        ctx.body = { message: 'Input missing' }
+    }
+    if (isNaN(index)) {
+        ctx.status = 400;
+        ctx.body = { message: 'Invalid index' }
+        return;
+    }
     if (ctx.state.user.isAdmin) {
         try {
             ctx.body = { array: arrayService.updateItem(index, value) };
@@ -54,6 +80,7 @@ router.put('/array/:index', async (ctx: Context) => {
 
 router.delete('/array', async (ctx: Context) => {
     if (ctx.state.user.isAdmin) {
+        ctx.status = 200;
         ctx.body = { array: arrayService.deleteLast() };
     } else {
         ctx.status = 403;
@@ -63,8 +90,14 @@ router.delete('/array', async (ctx: Context) => {
 
 router.delete('/array/:index', async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
+    if (isNaN(index)) {
+        ctx.status = 400;
+        ctx.body = { message: 'Invalid index' }
+        return;
+    }
     if (ctx.state.user.isAdmin) {
         try {
+            ctx.status = 200;
             ctx.body = { array: arrayService.deleteByIndex(index) };
         } catch (error) {
             if (error instanceof Error) {

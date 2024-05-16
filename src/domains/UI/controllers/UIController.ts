@@ -1,6 +1,6 @@
 import Router from 'koa-router';
 import { Context } from 'koa';
-import { authenticate } from './middleware/authMiddleware';
+import { authenticate } from '../../../application/authMiddleware';
 
 const router = new Router();
 
@@ -15,6 +15,7 @@ router.get('/', async (ctx: Context) => {
 router.get('/echo', async (ctx: Context) => {
     const message = ctx.query.msg as string;
     if (message) {
+        ctx.status = 200;
         ctx.body = { message: `The message is ${message}` };
     } else {
         ctx.status = 400;
