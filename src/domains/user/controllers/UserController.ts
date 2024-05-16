@@ -2,7 +2,7 @@ import Router from 'koa-router';
 import userService from '../services/UserService';
 import { Context } from 'koa';
 import { User } from '../domains/User'
-import { authenticate } from '../../../application/authMiddleware';
+import { authenticate, authorizeAdmin } from '../../../application/authMiddleware';
 
 const router = new Router();
 
@@ -68,7 +68,7 @@ router.post('/register', async (ctx: Context) => {
     }
 });
 
-router.post('/admin', authenticate, async (ctx: Context) => {
+router.post('/admin', authenticate, authorizeAdmin, async (ctx: Context) => {
     try {
         const { username } = ctx.request.body as User;
         const updatedUser = await userService.makeAdmin(username);

@@ -12,14 +12,6 @@ export interface UserService {
     makeAdmin: (username: string) => Promise<User>;
 }
 
-export interface SessionUser {
-    id: string;
-    username: string;
-    isAdmin: boolean;
-    iat: number;
-    exp: number;
-} 
-
 export interface UserRepository {
     findByUsername: (username: string) => Promise<User | undefined>;
     create: (user: Partial<User>) => Promise<User>;
