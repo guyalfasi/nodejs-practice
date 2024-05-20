@@ -1,3 +1,5 @@
+import { Context } from "koa";
+
 export interface User {
     id: string;
     username: string;
@@ -7,9 +9,9 @@ export interface User {
 }
 
 export interface UserService {
-    login: (username: string, password: string) => Promise<{user: User; token: string;}>;
-    register: (username: string, password: string, secretAdminPassword: string) => Promise<User>;
-    makeAdmin: (username: string) => Promise<User>;
+    login: (username: string, password: string, ctx: Context) => Promise<{user: User; token: string;} | void>;
+    register: (username: string, password: string, secretAdminPassword: string, ctx: Context) => Promise<User | void>;
+    makeAdmin: (username: string, ctx: Context) => Promise<User | void>;
 }
 
 export interface UserRepository {

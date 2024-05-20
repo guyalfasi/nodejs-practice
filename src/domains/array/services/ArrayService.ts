@@ -1,4 +1,4 @@
-import { ArrayService, ArrayItem } from "../domains/Array";
+import { ArrayService } from "../domains/Array";
 
 const arrayService: ArrayService = {
     arr: [1, "2", 3],
@@ -7,21 +7,23 @@ const arrayService: ArrayService = {
         return this.arr;
     },
 
-    getByIndex(index: number) {
+    getByIndex(index) {
         return this.arr[index] ?? null;
     },
 
-    addItem(value: ArrayItem) {
+    addItem(value) {
         this.arr.push(value);
         return this.arr;
     },
 
-    updateItem(index: number, value: ArrayItem) {
+    updateItem(index, value, ctx) {
         if (this.arr[index] !== undefined) {
             this.arr[index] = value;
             return this.arr;
         } else {
-            throw new Error('Index out of bounds');
+            ctx.status = 404;
+            ctx.body = { message: 'Index out of bounds' };
+            return;
         }
     },
 
@@ -30,12 +32,14 @@ const arrayService: ArrayService = {
         return this.arr;
     },
 
-    deleteByIndex(index: number) {
+    deleteByIndex(index, ctx) {
         if (this.arr[index] !== undefined) {
             this.arr[index] = 0;
             return this.arr;
         } else {
-            throw new Error('Index out of bounds');
+            ctx.status = 404;
+            ctx.body = { message: 'Index out of bounds' };
+            return;
         }
     }
 };

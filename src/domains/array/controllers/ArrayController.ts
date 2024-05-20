@@ -9,23 +9,16 @@ const router = new Router();
 router.use(authenticate);
 
 router.get('/array', async (ctx: Context) => {
-    try {
-        const array = arrayService.getAll();
-        ctx.status = 200;
-        ctx.body = { array };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.status = 500;
-            ctx.body = { message: error.message };
-        }
-    }
+    const array = arrayService.getAll();
+    ctx.status = 200;
+    ctx.body = { array };
 });
 
 router.get('/array/:index', async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
     if (isNaN(index)) {
         ctx.status = 400;
-        ctx.body = { message: 'Invalid index' }
+        ctx.body = { error: 'Invalid index' }
         return;
     }
     const item = arrayService.getByIndex(index);
@@ -33,7 +26,7 @@ router.get('/array/:index', async (ctx: Context) => {
         ctx.body = { value: item };
     } else {
         ctx.status = 404;
-        ctx.body = { message: "Index out of bounds" };
+        ctx.body = { error: "Index out of bounds" };
     }
 });
 
@@ -41,7 +34,8 @@ router.post('/array', authorizeAdmin, async (ctx: Context) => {
     const { value } = ctx.request.body as ArrayEndpoint;
     if (!value) {
         ctx.status = 400;
-        ctx.body = { message: 'Input missing' }
+        ctx.body = { error: 'Input missing' }
+        return;
     }
     ctx.body = { array: arrayService.addItem(value) };
 });
@@ -49,25 +43,22 @@ router.post('/array', authorizeAdmin, async (ctx: Context) => {
 router.put('/array/:index', authorizeAdmin, async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
     const { value } = ctx.request.body as ArrayEndpoint;
-    if (!value) {
+    if (value == null) {
         ctx.status = 400;
-        ctx.body = { message: 'Input missing' }
+        ctx.body = { error: 'Input missing' }
+        return;
     }
 
     if (isNaN(index)) {
         ctx.status = 400;
-        ctx.body = { message: 'Invalid index' }
+        ctx.body = { error: 'Invalid index' }
         return;
     }
 
-    try {
-        ctx.body = { array: arrayService.updateItem(index, value) };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.status = 404;
-            ctx.body = { message: error.message };
-        }
-    }
+    const updatedArray = arrayService.updateItem(index, value, ctx)
+    if (!updatedArray) return;
+
+    ctx.body = { message: 'Array updated', array: updatedArray};
 });
 
 router.delete('/array', authorizeAdmin, async (ctx: Context) => {
@@ -77,20 +68,16 @@ router.delete('/array', authorizeAdmin, async (ctx: Context) => {
 
 router.delete('/array/:index', authorizeAdmin, async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
+
     if (isNaN(index)) {
         ctx.status = 400;
-        ctx.body = { message: 'Invalid index' }
+        ctx.body = { error: 'Invalid index' }
         return;
     }
-    try {
-        ctx.status = 200;
-        ctx.body = { array: arrayService.deleteByIndex(index) };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.status = 404;
-            ctx.body = { message: error.message };
-        }
-    }
+
+    const updatedArray = arrayService.deleteByIndex(index, ctx);
+    if (!updatedArray) return;
+    ctx.body = { message: 'Array updated', array: updatedArray };
 });
 
 export default router;

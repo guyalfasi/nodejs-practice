@@ -11,31 +11,18 @@ router.post('/login', async (ctx: Context) => {
 
     if (!username || !password) {
         ctx.status = 400;
-        ctx.body = { message: 'One or more fields missing' };
+        ctx.body = { error: 'One or more fields missing' };
         return;
     }
 
-    try {
-        const { token }  = await userService.login(username, password);
-        ctx.cookies.set('auth', token, { httpOnly: true });
-        ctx.status = 200;
-        ctx.body = { message: 'Login successful', token };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.body = { message: error.message };
-            switch (error.message) {
-                case 'Invalid password':
-                    ctx.status = 400;
-                    break;
-                case 'User not found':
-                    ctx.status = 404;
-                    break;
-                default:
-                    ctx.status = 500;
-                    break;
-            }
-        }
-    }
+    const userLogin = await userService.login(username, password, ctx);
+
+    if (!userLogin) return;
+
+    const { user, token } = userLogin;
+
+    ctx.cookies.set('auth', token, { httpOnly: true });
+    ctx.body = { message: 'Login successful', user: user, token: token };
 });
 
 router.post('/register', async (ctx: Context) => {
@@ -43,52 +30,26 @@ router.post('/register', async (ctx: Context) => {
 
     if (!username || !password) {
         ctx.status = 400;
-        ctx.body = { message: 'One or more fields missing' };
+        ctx.body = { error: 'One or more fields missing' };
         return;
     }
 
-    try {
-        const newUser = await userService.register(username, password, secretAdminPassword ?? '');
-        ctx.status = 201;
-        ctx.body = { message: 'User registered successfully', user: newUser };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.body = { message: error.message };
-            switch (error.message) {
-                case 'Username already exists':
-                    ctx.status = 400;
-                    break;
-                default:
-                    ctx.status = 500;
-                    break;
-            }
-            ctx.status = 400;
-            ctx.body = { message: error.message };
-        }
-    }
+    const newUser = await userService.register(username, password, secretAdminPassword ?? '', ctx);
+
+    if (!newUser) return;
+
+    ctx.status = 201;
+    ctx.body = { message: 'User registered successfully', user: newUser };
 });
 
 router.post('/admin', authenticate, authorizeAdmin, async (ctx: Context) => {
-    try {
-        const { username } = ctx.request.body as User;
-        const updatedUser = await userService.makeAdmin(username);
-        ctx.body = { message: "Changed permissions for user", newAdmin: updatedUser };
-    } catch (error) {
-        if (error instanceof Error) {
-            ctx.body = { message: error.message };
-            switch (error.message) {
-                case 'User not found':
-                    ctx.status = 400;
-                    break;
-                case 'User is already an admin':
-                    ctx.status = 200;
-                    break;
-                default:
-                    ctx.status = 500;
-                    break;
-            }
-        }
-    }
+    const { username } = ctx.request.body as User;
+    const updatedUser = await userService.makeAdmin(username, ctx);
+
+    if (!updatedUser) return;
+
+    ctx.status = 200;
+    ctx.body = { message: "Changed permissions for user", newAdmin: updatedUser };
 });
 
 router.post('/logout', authenticate, async (ctx: Context) => {

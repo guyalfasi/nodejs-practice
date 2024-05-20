@@ -10,7 +10,6 @@ import { methodChecker } from './application/methodChecker';
 const app: Koa = new Koa();
 
 app.use(bodyParser());
-app.use(methodChecker)
 app.use(koaJwt({
     secret: process.env.JWT_SECRET as string,
     passthrough: true,
@@ -19,5 +18,7 @@ app.use(koaJwt({
 app.use(userRouter.routes()).use(userRouter.allowedMethods());
 app.use(arrayRouter.routes()).use(arrayRouter.allowedMethods());
 app.use(UIRouter.routes()).use(UIRouter.allowedMethods());
+
+app.use(methodChecker)
 
 app.listen(process.env.PORT).on('listening', () => console.log(`Listening on port ${process.env.PORT}`));
