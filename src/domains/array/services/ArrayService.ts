@@ -16,14 +16,10 @@ const arrayService: ArrayService = {
         return this.arr;
     },
 
-    updateItem(index, value, ctx) {
+    updateItem(index, value) {
         if (this.arr[index] !== undefined) {
             this.arr[index] = value;
             return this.arr;
-        } else {
-            ctx.status = 404;
-            ctx.body = { message: 'Index out of bounds' };
-            return;
         }
     },
 
@@ -32,15 +28,11 @@ const arrayService: ArrayService = {
         return this.arr;
     },
 
-    deleteByIndex(index, ctx) {
+    deleteByIndex(index) {
         if (this.arr[index] !== undefined) {
             this.arr[index] = 0;
             return this.arr;
-        } else {
-            ctx.status = 404;
-            ctx.body = { message: 'Index out of bounds' };
-            return;
-        }
+        } 
     }
 };
 

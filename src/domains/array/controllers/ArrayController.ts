@@ -55,8 +55,13 @@ router.put('/array/:index', authorizeAdmin, async (ctx: Context) => {
         return;
     }
 
-    const updatedArray = arrayService.updateItem(index, value, ctx)
-    if (!updatedArray) return;
+    const updatedArray = arrayService.updateItem(index, value)
+    
+    if (!updatedArray) {
+        ctx.status = 404;
+        ctx.body = { message: 'Index out of bounds' };
+        return;
+    };
 
     ctx.body = { message: 'Array updated', array: updatedArray};
 });
@@ -75,8 +80,14 @@ router.delete('/array/:index', authorizeAdmin, async (ctx: Context) => {
         return;
     }
 
-    const updatedArray = arrayService.deleteByIndex(index, ctx);
-    if (!updatedArray) return;
+    const updatedArray = arrayService.deleteByIndex(index);
+
+    if (!updatedArray) {
+        ctx.status = 404;
+        ctx.body = { message: 'Index out of bounds' };
+        return;
+    };
+
     ctx.body = { message: 'Array updated', array: updatedArray };
 });
 
