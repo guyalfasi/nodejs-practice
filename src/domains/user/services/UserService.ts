@@ -5,7 +5,7 @@ import { UserService } from '../domains/User';
 
 const userService: UserService = {
     async login(username, password, ctx) {
-        const user = await userRepository.findByUsername(username);
+        const user = await userRepository.get(username);
 
         if (!user) {
             ctx.status = 404;
@@ -26,7 +26,7 @@ const userService: UserService = {
     },
 
     async register(username, password, secretAdminPassword, ctx) {
-        const existingUser = await userRepository.findByUsername(username);
+        const existingUser = await userRepository.get(username);
 
         if (existingUser) {
             ctx.status = 400;
@@ -41,7 +41,7 @@ const userService: UserService = {
     },
 
     async makeAdmin(username, ctx) {
-        const user = await userRepository.findByUsername(username);
+        const user = await userRepository.get(username);
 
         if (!user) {
             ctx.status = 404;

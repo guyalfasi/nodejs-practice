@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { Knex } from 'knex';
 
 interface KnexConfig {
@@ -8,11 +9,11 @@ const config: KnexConfig = {
   development: {
     client: 'pg',
     connection: {
-      host: 'localhost',
-      user: 'postgres',
-      password: 'admin',
-      database: 'users',
-      port: 5432
+      host: process.env.KNEX_HOST,
+      user: process.env.KNEX_USER,
+      password: process.env.KNEX_PASSWORD,
+      database: process.env.KNEX_DATABASE,
+      port: process.env.KNEX_PORT as number | undefined
     },
     pool: {
       min: 2,

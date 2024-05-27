@@ -15,9 +15,11 @@ app.use(koaJwt({
     passthrough: true,
 }));
 
-app.use(userRouter.routes()).use(userRouter.allowedMethods());
-app.use(arrayRouter.routes()).use(arrayRouter.allowedMethods());
-app.use(UIRouter.routes()).use(UIRouter.allowedMethods());
+const routes = [userRouter, arrayRouter, UIRouter]
+
+routes.forEach(router => {
+    app.use(router.routes()).use(router.allowedMethods());
+});
 
 app.use(methodChecker)
 

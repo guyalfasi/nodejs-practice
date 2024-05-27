@@ -43,7 +43,7 @@ router.post('/array', authorizeAdmin, async (ctx: Context) => {
 router.put('/array/:index', authorizeAdmin, async (ctx: Context) => {
     const index = parseInt(ctx.params.index);
     const { value } = ctx.request.body as ArrayEndpoint;
-    if (value == null) {
+    if (!value) {
         ctx.status = 400;
         ctx.body = { error: 'Input missing' }
         return;
@@ -56,7 +56,7 @@ router.put('/array/:index', authorizeAdmin, async (ctx: Context) => {
     }
 
     const updatedArray = arrayService.updateItem(index, value)
-    
+
     if (!updatedArray) {
         ctx.status = 404;
         ctx.body = { message: 'Index out of bounds' };

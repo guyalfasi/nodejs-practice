@@ -15,7 +15,7 @@ export interface UserService {
 }
 
 export interface UserRepository {
-    findByUsername: (username: string) => Promise<User | undefined>;
+    get: (username: string) => Promise<User | undefined>;
     create: (user: Partial<User>) => Promise<User>;
     updateToAdmin: (username: string) => Promise<User>;
 }
